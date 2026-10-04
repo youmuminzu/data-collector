@@ -1,0 +1,146 @@
+{
+  "updated_at": "2026-10-04 09:33:52",
+  "upload_at": "2026-10-04 13:50:47",
+  "data": [
+    {
+      "category_id": "manufacturing",
+      "name": "制造业与工业"
+    },
+    {
+      "category_id": "government_governance",
+      "name": "政务与城市治理"
+    },
+    {
+      "category_id": "healthcare",
+      "name": "医疗健康"
+    },
+    {
+      "category_id": "energy_power",
+      "name": "能源电力"
+    },
+    {
+      "category_id": "finance",
+      "name": "金融业"
+    },
+    {
+      "category_id": "transportation_logistics",
+      "name": "交通运输、仓储与物流"
+    },
+    {
+      "category_id": "culture_tourism",
+      "name": "文化旅游与文体娱乐"
+    },
+    {
+      "category_id": "legal_services",
+      "name": "司法与法律服务"
+    },
+    {
+      "category_id": "cross_border",
+      "name": "跨境与外贸"
+    },
+    {
+      "category_id": "retail_ecommerce",
+      "name": "批发零售与电子商务"
+    },
+    {
+      "category_id": "ai_service",
+      "name": "人工智能与智能服务"
+    },
+    {
+      "category_id": "information_communication",
+      "name": "信息传输、软件与通信"
+    },
+    {
+      "category_id": "education",
+      "name": "教育"
+    },
+    {
+      "category_id": "scientific_research",
+      "name": "科学研究与技术服务业"
+    },
+    {
+      "category_id": "real_estate",
+      "name": "房地产业"
+    },
+    {
+      "category_id": "automobile",
+      "name": "汽车"
+    },
+    {
+      "category_id": "hospitality",
+      "name": "住宿和餐饮业"
+    },
+    {
+      "category_id": "construction",
+      "name": "建筑业"
+    },
+    {
+      "category_id": "mining",
+      "name": "采矿业"
+    },
+    {
+      "category_id": "agriculture",
+      "name": "农林牧渔"
+    },
+    {
+      "category_id": "leasing_business",
+      "name": "租赁和商务服务业"
+    },
+    {
+      "category_id": "resident_services",
+      "name": "居民服务与生活服务业"
+    },
+    {
+      "category_id": "credit_service",
+      "name": "信用服务"
+    },
+    {
+      "category_id": "eco_environment",
+      "name": "生态环保与绿色低碳"
+    },
+    {
+      "category_id": "statistics",
+      "name": "统计与社会统计"
+    },
+    {
+      "category_id": "meteorology",
+      "name": "气象服务"
+    },
+    {
+      "category_id": "others",
+      "name": "其他与综合"
+    },
+    {
+      "category_id": "emergency_safety",
+      "name": "应急管理与公共安全"
+    },
+    {
+      "category_id": "media_marketing",
+      "name": "新闻传媒与市场营销"
+    },
+    {
+      "category_id": "geospatial",
+      "name": "地理空间与遥感"
+    },
+    {
+      "category_id": "all_scenarios",
+      "name": "全场景/不限"
+    },
+    {
+      "category_id": "tobacco",
+      "name": "烟草"
+    },
+    {
+      "category_id": "intellectual_property",
+      "name": "知识产权"
+    },
+    {
+      "category_id": "ceramics",
+      "name": "陶瓷"
+    },
+    {
+      "category_id": "international_organization",
+      "name": "国际组织"
+    }
+  ]
+}

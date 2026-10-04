@@ -1,0 +1,15 @@
+# Python-generated files
+.workbuddy/
+data/
+state/
+*.txt
+*[Cc][Aa][Cc][Hh][Ee]*
+*.md
+# Virtual environments
+.venv
+
+*.conf
+
+# 产出 CSV 不入库：数据本体在 R2，仓库只留索引 json
+processor/processeddata/*.csv
+

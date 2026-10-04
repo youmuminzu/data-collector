@@ -1,0 +1,18 @@
+﻿站点,参数名,是否占位,示例值,含义,取值来源/规则
+北京,productId,是,e79998a79f7e1d49d9d23a6a91e80d43,商品唯一标识,列表 records[].uuid（32 位十六进制）
+上海,id,是,6829,商品登记 ID,列表 records[].id（数字，与详情页接口 registerDetail/{id} 同源）
+上海,type,是,1 / 2,商品服务状态,1=已登记，2=可交易；对应列表 serviceType 字段（已登记/可交易）。决定调哪个详情接口，填错会白页
+上海,from,否,admin,来源标识,前端写死常量，实测不影响渲染与接口
+上海,productType,否,2,产品形态（未生效）,前端写死常量；实测 1/2/3 页面与接口完全一致
+杭州,productId,是,691330127MA28NJBQ8X3301HZ0139565,商品业务编码,列表 records[].productId（25 位），注意不是数字 id
+杭州,from,否,%2Fdata-exchange,来源路由,encodeURIComponent 后的列表页路径，可省略
+广东,id,是,8376,商品自增 ID,列表 ID 字段（数字）；不是 CPBH 产品编号，也不是 WBCPBH
+贵阳,id,是,5504,商品 ID,列表 id 字段（数字），同时作为 serviceId 传给详情接口
+福建,id,是,1780890734680420353,商品 ID,列表 id 字段（19 位雪花 ID）
+福建,time,否,1790997234356,点击时刻时间戳（毫秒）,前端生成，用于绕缓存/埋点；省略后页面正常
+福建,isXxjssc,否,false / true,详情域标识,false→详情接口 type=1，true→type=3；省略等同 false，页面渲染无差异
+郑州,productType,是,dataSet / dataApi / dataApp / dataReport,产品形态（路径段）,列表 productType 字段；全站分布 dataSet 365、dataApi 156、dataApp 45、dataReport 1
+郑州,id,是,2056990028951306240,商品 ID,列表 id 字段（19 位雪花 ID）
+北方,productId,是,8bf0c86cffbf4ed2b77672513bba34a7,商品 ID,列表 productId 字段（32 位十六进制）
+北方,removeSideBar,否,true,隐藏侧边栏,列表页同款参数，可省略（省略后带完整导航）
+海南,id,是,2bc5242408284b5c8017da10884d5074,资源 ID,列表 proResourceId（32 位十六进制）；不是 proResourceInfoId

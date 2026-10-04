@@ -1,0 +1,51 @@
+{
+  "updated_at": "2026-10-04 09:33:52",
+  "upload_at": "2026-10-04 13:50:46",
+  "data": [
+    {
+      "market_id": "beifang",
+      "name": "北方大数据交易平台",
+      "short_name": "北方"
+    },
+    {
+      "market_id": "beijing",
+      "name": "北京大数据交易所",
+      "short_name": "北京"
+    },
+    {
+      "market_id": "fujian",
+      "name": "福建大数据交易平台",
+      "short_name": "福建"
+    },
+    {
+      "market_id": "guangdong",
+      "name": "广东数据交易所",
+      "short_name": "广东"
+    },
+    {
+      "market_id": "guiyang",
+      "name": "贵阳大数据交易所",
+      "short_name": "贵阳"
+    },
+    {
+      "market_id": "hainan",
+      "name": "海南省数据产品超市",
+      "short_name": "海南"
+    },
+    {
+      "market_id": "hangzhou",
+      "name": "杭州数据交易所",
+      "short_name": "杭州"
+    },
+    {
+      "market_id": "shanghai",
+      "name": "上海数据交易所",
+      "short_name": "上海"
+    },
+    {
+      "market_id": "zhengzhou",
+      "name": "郑州数据交易中心",
+      "short_name": "郑州"
+    }
+  ]
+}

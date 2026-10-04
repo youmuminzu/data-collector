@@ -1,0 +1,112 @@
+name: 每日数据采集与上传
+
+# 流程：爬取 9 个交易所 → 清洗成统一 CSV → 上传 R2 → 把产出提交回本仓库
+#
+# 为什么最后要提交回仓库：processor/processeddata 里三个 json 的 upload_at 字段
+# 是「上次推送时间」的唯一持久化载体。CI 每次都是全新机器，不提交的话下次运行时
+# upload_at 是空的，脚本就会把没变化的文件再传一遍，还拿不到增量判断。
+
+on:
+  schedule:
+    # UTC 18:00 = 北京时间次日 02:00（北京 = UTC+8）
+    # GitHub 定时任务要排队，整点经常延迟几分钟；想更准可改成 '50 17' 之类错峰
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_crawl:
+        description: 跳过采集，只用已有数据重跑「处理 + 上传」
+        type: boolean
+        default: false
+      force_upload:
+        description: 忽略 updated_at/upload_at 判定，强制重传全部文件
+        type: boolean
+        default: false
+
+permissions:
+  contents: write        # 允许把产出推回本仓库；GITHUB_TOKEN 自动生效
+
+concurrency:
+  group: daily-pipeline
+  cancel-in-progress: false   # 采集中途别取消，跑一半的进度在 CI 里留不下来
+
+env:
+  TZ: Asia/Shanghai      # 只影响日志与提交信息里的时间显示
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330  # 单个 job 硬上限是 360 分钟，留 30 分钟余量
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        # 不传 token 时默认用 GITHUB_TOKEN，私有仓库往自己身上推送够用了
+
+      - name: 安装 uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: 安装依赖
+        run: uv sync --frozen
+
+      # 每次都是全新机器：state/ 和 data/ 都是空的，所以必然走全量采集，
+      # 不会命中「上次已完成就跳过」的断点续传逻辑。
+      - name: 爬取 9 个交易所
+        if: ${{ !inputs.skip_crawl }}
+        run: |
+          failed=0
+          for s in bj sh hz gd gy fj zz bf hi; do
+            echo "===== crawl_${s}.py ====="
+            if uv run python "crawl_${s}.py"; then
+              echo "--- ${s} 完成"
+            else
+              code=$?
+              echo "::warning::crawl_${s}.py 失败（退出码 ${code}）"
+              failed=$((failed + 1))
+            fi
+          done
+          echo "采集结束，失败站点数：${failed}"
+          if [ "$failed" -gt 0 ]; then
+            echo "::warning::${failed} 个站点采集失败，后续处理会自动跳过它们"
+          fi
+
+      - name: 清洗并生成统一 CSV
+        run: uv run python processor/build_products.py
+
+      - name: 上传到 R2
+        env:
+          # 走环境变量注入，不在 CI 里落 R2keys.conf —— 脚本里环境变量优先级高于配置文件
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+        run: |
+          if [ "${{ inputs.force_upload }}" = "true" ]; then
+            uv run python processor/transmitter/transtoR2.py --all --force
+          else
+            uv run python processor/transmitter/transtoR2.py --all
+          fi
+
+      - name: 提交产出回仓库
+        run: |
+          shopt -s nullglob
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 只提交三个 json（market / category / product_files）：
+          # CSV 数据本体已在 R2，不进仓库 —— 既不撑大体积，public 仓库下也不公开数据。
+          # json 里带 upload_at，是下次判断「要不要重新上传」的唯一依据，必须提交。
+          git add processor/processeddata/*.json
+          if git diff --cached --quiet; then
+            echo "本次没有变化，跳过提交"
+          else
+            git commit -m "chore(data): 每日数据更新 $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
+
+      - name: 汇总
+        if: always()
+        run: |
+          echo "产出目录："
+          ls -lh processor/processeddata || true
