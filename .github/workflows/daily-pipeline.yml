@@ -1,6 +1,11 @@
 name: 每日数据采集与上传
 
-# 流程：爬取 9 个交易所 → 清洗成统一 CSV → 上传 R2 → 把产出提交回本仓库
+# 流程：9 个站点并行采集 → 汇齐 CSV → processor 清洗 → 上传 R2 → 索引 json 提交回仓库
+#
+# 为什么采集要拆成 9 个并行 job：串行跑一遍要 2~3 小时（广东 2 万条是大头），
+# 逼近单个 job 6 小时上限还有风险。拆开后总耗时 ≈ 最慢那一站。
+# 各站本来就是独立的：各写各的 data/{site}_products.csv，互不依赖，
+# 所以代码一行都不用改，只要把产出用 artifact 汇聚到处理 job 即可。
 #
 # 为什么最后要提交回仓库：processor/processeddata 里三个 json 的 upload_at 字段
 # 是「上次推送时间」的唯一持久化载体。CI 每次都是全新机器，不提交的话下次运行时
@@ -13,10 +18,6 @@ on:
     - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
-      skip_crawl:
-        description: 跳过采集，只用已有数据重跑「处理 + 上传」
-        type: boolean
-        default: false
       force_upload:
         description: 忽略 updated_at/upload_at 判定，强制重传全部文件
         type: boolean
@@ -33,43 +34,80 @@ env:
   TZ: Asia/Shanghai      # 只影响日志与提交信息里的时间显示
 
 jobs:
-  pipeline:
+  # ── 1. 采集：9 个站点各跑一个 job ────────────────────────────────
+  crawl:
+    name: 采集 ${{ matrix.site }}
     runs-on: ubuntu-latest
-    timeout-minutes: 330  # 单个 job 硬上限是 360 分钟，留 30 分钟余量
-
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false   # 一站挂了不影响其他站
+      matrix:
+        # 超时按站点数据量给，广东 2 万条最久；跑几次后可照实际情况微调
+        include:
+          - { site: bj, timeout: 60 }
+          - { site: sh, timeout: 120 }
+          - { site: hz, timeout: 60 }
+          - { site: gd, timeout: 180 }
+          - { site: gy, timeout: 60 }
+          - { site: fj, timeout: 60 }
+          - { site: zz, timeout: 30 }
+          - { site: bf, timeout: 60 }
+          - { site: hi, timeout: 60 }
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-        # 不传 token 时默认用 GITHUB_TOKEN，私有仓库往自己身上推送够用了
-
-      - name: 安装 uv
-        uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
-
       - name: 安装依赖
         run: uv sync --frozen
 
-      # 每次都是全新机器：state/ 和 data/ 都是空的，所以必然走全量采集，
-      # 不会命中「上次已完成就跳过」的断点续传逻辑。
-      - name: 爬取 9 个交易所
-        if: ${{ !inputs.skip_crawl }}
+      - name: 采集
+        run: uv run python "crawl_${{ matrix.site }}.py"
+
+      # 采集失败也要传：断点续传可能已经写了一半的 CSV，能救回多少是多少
+      - name: 暂存 CSV
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-${{ matrix.site }}
+          path: data/*_products.csv
+          if-no-files-found: warn   # 该站一条都没抓到时只警告，不算失败
+          retention-days: 1         # 纯中转，不占存储
+
+  # ── 2. 处理 → 上传 → 提交 ───────────────────────────────────────
+  pipeline:
+    name: 处理并上传
+    needs: crawl
+    # 用 !cancelled() 而不是默认的「上游必须成功」：
+    # 部分站点失败时，剩下几站的数据照样要处理上传，不能整批作废
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: 安装依赖
+        run: uv sync --frozen
+
+      - name: 取回各站 CSV
+        uses: actions/download-artifact@v4
+        with:
+          pattern: data-*
+          path: data
+          merge-multiple: true   # 9 份直接摊平进 data/，不按 artifact 名分目录
+
+      - name: 检查采集结果
         run: |
-          failed=0
-          for s in bj sh hz gd gy fj zz bf hi; do
-            echo "===== crawl_${s}.py ====="
-            if uv run python "crawl_${s}.py"; then
-              echo "--- ${s} 完成"
-            else
-              code=$?
-              echo "::warning::crawl_${s}.py 失败（退出码 ${code}）"
-              failed=$((failed + 1))
-            fi
-          done
-          echo "采集结束，失败站点数：${failed}"
-          if [ "$failed" -gt 0 ]; then
-            echo "::warning::${failed} 个站点采集失败，后续处理会自动跳过它们"
+          shopt -s nullglob
+          files=(data/*_products.csv)
+          echo "收到 ${#files[@]} 份站点数据"
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::error::9 个站点全部采集失败，没有可处理的数据，终止"
+            exit 1
           fi
 
       - name: 清洗并生成统一 CSV
@@ -108,5 +146,5 @@ jobs:
       - name: 汇总
         if: always()
         run: |
-          echo "产出目录："
-          ls -lh processor/processeddata || true
+          echo "产出的索引文件："
+          ls -lh processor/processeddata/*.json || true
