@@ -1,32 +1,37 @@
 [
   {
     "file_name": "beifang_new.csv",
-    "updated_at": "2026-11-10 09:40:46",
-    "upload_at": "2026-11-10 09:40:48"
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:49"
   },
   {
     "file_name": "beijing_new.csv",
-    "updated_at": "2026-11-10 09:40:46",
-    "upload_at": "2026-11-10 09:40:48"
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:49"
   },
   {
     "file_name": "guangdong_new.csv",
-    "updated_at": "2026-11-10 09:40:46",
-    "upload_at": "2026-11-10 09:40:49"
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:49"
+  },
+  {
+    "file_name": "hainan_new.csv",
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:50"
   },
   {
     "file_name": "hangzhou_new.csv",
-    "updated_at": "2026-11-10 09:40:46",
-    "upload_at": "2026-11-10 09:40:50"
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:51"
   },
   {
     "file_name": "shanghai_new.csv",
-    "updated_at": "2026-11-10 09:40:46",
-    "upload_at": "2026-11-10 09:40:51"
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:51"
   },
   {
     "file_name": "zhengzhou_new.csv",
-    "updated_at": "2026-11-10 09:40:46",
-    "upload_at": "2026-11-10 09:40:52"
+    "updated_at": "2026-11-11 07:16:47",
+    "upload_at": "2026-11-11 07:16:52"
   }
 ]
